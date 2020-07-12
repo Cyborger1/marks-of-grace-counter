@@ -6,6 +6,7 @@ import javax.inject.Inject;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemDespawned;
@@ -82,7 +83,12 @@ public class MOGCounterPlugin extends Plugin
 	{
 		final TileItem item = itemSpawned.getItem();
 		if (item.getId() == ItemID.MARK_OF_GRACE)
-			mogSession.incrementMarksOfGraceSpawned(item.getQuantity());
+		{
+			WorldPoint wp = itemSpawned.getTile().getWorldLocation();
+			Player player = client.getLocalPlayer();
+			if (player != null && !wp.equals(player.getWorldLocation()))
+				mogSession.addMarkTile(wp, item.getQuantity());
+		}
 	}
 
 	@Subscribe
@@ -90,7 +96,7 @@ public class MOGCounterPlugin extends Plugin
 	{
 		final TileItem item = itemDespawned.getItem();
 		if (item.getId() == ItemID.MARK_OF_GRACE)
-			mogSession.incrementMarksOfGraceSpawned(-item.getQuantity());
+			mogSession.removeMarkTile(itemDespawned.getTile().getWorldLocation());
 	}
 
 	@Subscribe

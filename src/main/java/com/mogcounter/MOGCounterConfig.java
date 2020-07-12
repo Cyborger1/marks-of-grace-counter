@@ -5,7 +5,7 @@ import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.Units;
 
-@ConfigGroup("example")
+@ConfigGroup("mogcounter")
 public interface MOGCounterConfig extends Config
 {
 	@ConfigItem(
@@ -56,7 +56,7 @@ public interface MOGCounterConfig extends Config
 	@ConfigItem(
 			keyName = "showMarksPerHour",
 			name = "Show Spawns per Hour",
-			description = "Shows the estimated amount of Mark spawns per hour",
+			description = "Shows the estimated amount of Mark spawns per hour (After getting 2 spawns)",
 			position = 5
 	)
 	default boolean showMarksPerHour()
