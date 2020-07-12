@@ -57,8 +57,8 @@ class MOGCounterOverlay extends OverlayPanel
 		this.plugin = plugin;
 		this.config = config;
 		getMenuEntries().add(new OverlayMenuEntry(RUNELITE_OVERLAY_CONFIG, OPTION_CONFIGURE, "Mark overlay"));
-		getMenuEntries().add(new OverlayMenuEntry(RUNELITE_OVERLAY, MARK_CLEAR, "Mark overlay"));
 		getMenuEntries().add(new OverlayMenuEntry(RUNELITE_OVERLAY, GROUND_RESET, "Mark overlay"));
+		getMenuEntries().add(new OverlayMenuEntry(RUNELITE_OVERLAY, MARK_CLEAR, "Mark overlay"));
 	}
 
 	@Override

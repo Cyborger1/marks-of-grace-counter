@@ -70,8 +70,11 @@ class MOGSession
 		{
 			Duration timeSinceStart = Duration.between(firstMarkSpawn, now);
 			if (!timeSinceStart.isZero())
-				marksPerHour = (int) ((double) totalMarksSpawned * (double) HOUR.toMillis()
-						/ (double) timeSinceStart.toMillis());
+			{
+				double val = (double) totalMarksSpawned * (double) HOUR.toMillis() / (double) timeSinceStart.toMillis();
+				if (val > 999) marksPerHour = 999;
+				else marksPerHour = (int) val;
+			}
 		}
 
 	}

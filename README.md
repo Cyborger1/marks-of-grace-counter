@@ -2,7 +2,7 @@
 This plugin counts the number of Marks of Grace
 that spawn while you're doing rooftop agility.
 
-![GitHub Logo](/images/marks.PNG)
+![GitHub Logo](/images/marks.png)
 
 ## Features
 The plugin provides the following metrics:
@@ -15,7 +15,7 @@ The plugin provides the following metrics:
     
 ## Known Issues
 * Dropping Marks on the ground yourself does
-trigger the plugin and mess up the counters.
+trigger the plugin and messes up the counters.
 Be careful!
     * Shift-click the overlay and select the
     __Clear__ option to reset the counters.
