@@ -85,4 +85,10 @@ class MOGSession
 		totalMarksSpawned = 0;
 		marksPerHour = 0;
 	}
+
+	void clearSpawnedMarks()
+	{
+		marksSpawned = 0;
+		lastMarksSpawned = 0;
+	}
 }

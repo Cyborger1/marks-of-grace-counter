@@ -44,6 +44,7 @@ import static net.runelite.client.ui.overlay.OverlayManager.OPTION_CONFIGURE;
 class MOGCounterOverlay extends OverlayPanel
 {
 	static final String MARK_CLEAR = "Clear";
+	static final String GROUND_RESET = "Reset Ground Counter";
 	private final MOGCounterPlugin plugin;
 	private final MOGCounterConfig config;
 
@@ -57,6 +58,7 @@ class MOGCounterOverlay extends OverlayPanel
 		this.config = config;
 		getMenuEntries().add(new OverlayMenuEntry(RUNELITE_OVERLAY_CONFIG, OPTION_CONFIGURE, "Mark overlay"));
 		getMenuEntries().add(new OverlayMenuEntry(RUNELITE_OVERLAY, MARK_CLEAR, "Mark overlay"));
+		getMenuEntries().add(new OverlayMenuEntry(RUNELITE_OVERLAY, GROUND_RESET, "Mark overlay"));
 	}
 
 	@Override
@@ -84,14 +86,14 @@ class MOGCounterOverlay extends OverlayPanel
 		panelComponent.getChildren().add(TitleComponent.builder().text("Marks of Grace").build());
 
 		panelComponent.getChildren().add(LineComponent.builder()
-			.left("Total Marks:")
+			.left("Total Spawns:")
 			.right(Integer.toString(session.getTotalMarksSpawned()))
 			.build());
 
 		if (config.showMarksSpawned())
 		{
 			panelComponent.getChildren().add(LineComponent.builder()
-				.left("Marks on Course:")
+				.left("Marks on Ground:")
 				.right(Integer.toString(session.getMarksSpawned()))
 				.build());
 		}
@@ -107,7 +109,7 @@ class MOGCounterOverlay extends OverlayPanel
 
 		if (config.showMarksPerHour() && session.getTotalMarksSpawned() >= 3)
 			panelComponent.getChildren().add(LineComponent.builder()
-				.left("Marks per Hour:")
+				.left("Spawns per Hour:")
 				.right(Integer.toString(session.getMarksPerHour()))
 				.build());
 

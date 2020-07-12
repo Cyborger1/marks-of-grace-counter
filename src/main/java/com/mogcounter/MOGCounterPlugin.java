@@ -20,7 +20,9 @@ import net.runelite.client.ui.overlay.OverlayMenuEntry;
 
 @Slf4j
 @PluginDescriptor(
-	name = "Example"
+	name = "Marks of Grace Counter",
+	description = "Counts Marks of Grace spawns",
+	tags={"marks","grace","agility","counter"}
 )
 public class MOGCounterPlugin extends Plugin
 {
@@ -102,10 +104,17 @@ public class MOGCounterPlugin extends Plugin
 	{
 		OverlayMenuEntry overlayMenuEntry = overlayMenuClicked.getEntry();
 		if (overlayMenuEntry.getMenuAction() == MenuAction.RUNELITE_OVERLAY
-			&& overlayMenuClicked.getOverlay() == mogOverlay
-			&& overlayMenuClicked.getEntry().getOption().equals(MOGCounterOverlay.MARK_CLEAR))
+			&& overlayMenuClicked.getOverlay() == mogOverlay)
 		{
-			mogSession.clearCounters();
+			switch(overlayMenuClicked.getEntry().getOption())
+			{
+				case MOGCounterOverlay.MARK_CLEAR:
+					mogSession.clearCounters();
+					break;
+				case MOGCounterOverlay.GROUND_RESET:
+					mogSession.clearSpawnedMarks();
+					break;
+			}
 		}
 	}
 }

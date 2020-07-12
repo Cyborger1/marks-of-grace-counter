@@ -10,8 +10,9 @@ public interface MOGCounterConfig extends Config
 {
 	@ConfigItem(
 			keyName = "showMarkCount",
-			name = "Show Marks Count",
-			description = "Enable/disable the Marks of Grace Counter"
+			name = "Show Overlay",
+			description = "Show/Hide the Marks of Grace Counter (It keeps counting)",
+			position = 1
 	)
 	default boolean showMarkCount()
 	{
@@ -20,16 +21,21 @@ public interface MOGCounterConfig extends Config
 
 	@ConfigItem(
 			keyName = "markTimeout",
-			name = "Hide Marks Count",
-			description = "Time until the Marks of Grace Counter hides/resets (Uses 'Last Mark Time')"
+			name = "Hide Overlay",
+			description = "Time until the Marks of Grace Counter hides/resets (Uses 'Last Mark Time')",
+			position = 2
 	)
 	@Units(Units.MINUTES)
-	default int markTimeout() { return 10; }
+	default int markTimeout()
+	{
+		return 10;
+	}
 
 	@ConfigItem(
 			keyName = "showMarksSpawned",
-			name = "Show Amount of Spawned Marks",
-			description = "Shows how many Marks are currently on the course (Recommended for Ardougne Rooftops)"
+			name = "Show On Ground Counter",
+			description = "Shows how many Marks are currently on the ground (Recommended for Ardougne Rooftops)",
+			position = 3
 	)
 	default boolean showMarksSpawned()
 	{
@@ -38,8 +44,9 @@ public interface MOGCounterConfig extends Config
 
 	@ConfigItem(
 			keyName = "showMarkLastSpawn",
-			name = "Show Time Since Last Mark",
-			description = "Shows the time since the last Mark of Grace spawned"
+			name = "Show Time Since Last Spawn",
+			description = "Shows the time since the last Mark of Grace spawned",
+			position = 4
 	)
 	default boolean showMarkLastSpawn()
 	{
@@ -48,8 +55,9 @@ public interface MOGCounterConfig extends Config
 
 	@ConfigItem(
 			keyName = "showMarksPerHour",
-			name = "Show Marks per Hour",
-			description = "Shows the estimated amount of Mark spawns per hour"
+			name = "Show Spawns per Hour",
+			description = "Shows the estimated amount of Mark spawns per hour",
+			position = 5
 	)
 	default boolean showMarksPerHour()
 	{
