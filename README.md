@@ -1,10 +1,11 @@
-# Marks of Grace Counter Plugin
+# Marks of Grace Counter
 This plugin counts the number of Marks of Grace
 that spawn while you're doing rooftop agility.
 
 ![GitHub Logo](/images/marks.PNG)
 
-It provides the following metrics:
+## Features
+The plugin provides the following metrics:
 * The total number of spawns.
 * The current number of Marks on the ground
     * Useful for the Ardougne course.
@@ -12,7 +13,7 @@ It provides the following metrics:
 * The estimated amount of Mark spawns per hour.
     * Appears after getting at least a few spawns.
     
-Known Issues:
+## Known Issues
 * Dropping Marks on the ground yourself does
 trigger the plugin and mess up the counters.
 Be careful!
