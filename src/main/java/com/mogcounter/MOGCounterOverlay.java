@@ -42,13 +42,13 @@ class MOGCounterOverlay extends OverlayPanel
 
 		if (!config.showMarkCount() ||
 			session == null ||
-			session.getLastMarkSpawn() == null)
+			session.getLastMarkSpawnTime() == null)
 		{
 			return null;
 		}
 
 		Duration markTimeout = Duration.ofMinutes(config.markTimeout());
-		Duration sinceMark = Duration.between(session.getLastMarkSpawn(), Instant.now());
+		Duration sinceMark = Duration.between(session.getLastMarkSpawnTime(), Instant.now());
 
 		if (sinceMark.compareTo(markTimeout) >= 0)
 		{

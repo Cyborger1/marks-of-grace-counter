@@ -1,5 +1,6 @@
 package com.mogcounter;
 
+import com.google.common.collect.EvictingQueue;
 import lombok.AccessLevel;
 import lombok.Getter;
 import net.runelite.api.coords.WorldPoint;
@@ -16,9 +17,7 @@ class MOGSession
 	@Getter(AccessLevel.PACKAGE)
 	private int marksSpawned;
 	@Getter(AccessLevel.PACKAGE)
-	private Instant lastMarkSpawn;
-	@Getter(AccessLevel.PACKAGE)
-	private Instant firstMarkSpawn;
+	private Instant lastMarkSpawnTime;
 	@Getter(AccessLevel.PACKAGE)
 	private int totalMarkSpawnEvents;
 	@Getter(AccessLevel.PACKAGE)
@@ -26,6 +25,7 @@ class MOGSession
 
 	private final Map<WorldPoint, Integer> markPoints = new HashMap<>();
 	private boolean isDirty;
+	private EvictingQueue<Duration> markSpawnTimes = EvictingQueue.create(10);
 
 	void addMarkTile(WorldPoint point, int markCount)
 	{
@@ -51,30 +51,37 @@ class MOGSession
 		Instant now = Instant.now();
 		if(marksSpawned > lastMarksSpawned)
 		{
-			if (firstMarkSpawn == null)
-				firstMarkSpawn = now;
-			lastMarkSpawn = now;
+			if (lastMarkSpawnTime != null)
+			{
+				markSpawnTimes.add(Duration.between(lastMarkSpawnTime, now));
+				calculateMarksPerHour();
+			}
+			lastMarkSpawnTime = now;
 			totalMarkSpawnEvents++;
 		}
 		lastMarksSpawned = marksSpawned;
+	}
 
-		if (firstMarkSpawn != null)
+	private void calculateMarksPerHour()
+	{
+		int sz = markSpawnTimes.size();
+		if (sz > 0)
 		{
-			Duration timeSinceStart = Duration.between(firstMarkSpawn, now);
-			if (!timeSinceStart.isZero())
-			{
-				double val = (double) totalMarkSpawnEvents * (double) HOUR.toMillis() / (double) timeSinceStart.toMillis();
-				if (val > 999) spawnsPerHour = 999;
-				else spawnsPerHour = (int) val;
-			}
+			Duration sum = Duration.ZERO;
+			for (Duration markTime : markSpawnTimes)
+				sum = sum.plus(markTime);
+
+			spawnsPerHour = (int) (HOUR.toMillis() / sum.dividedBy(sz).toMillis());
 		}
+		else
+			spawnsPerHour = 0;
 	}
 
 	void clearCounters()
 	{
 		lastMarksSpawned = 0;
-		lastMarkSpawn = null;
-		firstMarkSpawn = null;
+		lastMarkSpawnTime = null;
+		markSpawnTimes.clear();
 		marksSpawned = 0;
 		totalMarkSpawnEvents = 0;
 		spawnsPerHour = 0;
