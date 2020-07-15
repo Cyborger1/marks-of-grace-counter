@@ -117,9 +117,16 @@ public class MOGCounterPlugin extends Plugin
 		{
 			WorldPoint wp = itemSpawned.getTile().getWorldLocation();
 			Player player = client.getLocalPlayer();
-			if (player != null && !wp.equals(player.getWorldLocation()))
+			if (player != null)
 			{
-				mogSession.addMarkTile(wp, item.getQuantity());
+				if (wp.equals(player.getWorldLocation()))
+				{
+					mogSession.addIgnoreTile(wp);
+				}
+				else
+				{
+					mogSession.addMarkTile(wp, item.getQuantity());
+				}
 			}
 		}
 	}
@@ -130,7 +137,16 @@ public class MOGCounterPlugin extends Plugin
 		final TileItem item = itemDespawned.getItem();
 		if (item.getId() == ItemID.MARK_OF_GRACE)
 		{
-			mogSession.removeMarkTile(itemDespawned.getTile().getWorldLocation());
+			WorldPoint wp = itemDespawned.getTile().getWorldLocation();
+			Player player = client.getLocalPlayer();
+			if (player != null)
+			{
+				if (wp.equals(player.getWorldLocation()))
+				{
+					mogSession.removeIgnoreTile(wp);
+				}
+				mogSession.removeMarkTile(wp);
+			}
 		}
 	}
 

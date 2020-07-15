@@ -14,15 +14,16 @@ The plugin provides the following metrics:
     * Appears after getting at least 2 spawns.
     
 ## Known Issues
-* Dropping Marks on the ground yourself does
-trigger a spawn for the plugin if you reload
-the scene. Be careful!
-    * Shift-click the overlay and select the
-    __Clear__ option to reset the counters.
+* The plugin tries to remember where you dropped
+marks and ignores those tiles when detecting mark
+spawns, so dropping your marks on tiles where they
+can spawn will lead to issues.
 * The plugin assumes you always eventually pick
 up the Marks before they despawn. If a mark
 despawns while you're not there to see it,
 the "Marks on Ground" counter will get desynced.
     * Pick up any Marks in the area and select
     the __Reset Ground Counter__ option on the
-    overlay to fix this.
+    overlay shift-click to fix this.
+    * Alternatively shift-click the overlay and
+    select the __Clear__ option to reset everything.

@@ -33,6 +33,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 class MOGSession
 {
@@ -48,20 +50,34 @@ class MOGSession
 	@Getter(AccessLevel.PACKAGE)
 	private int spawnsPerHour;
 
-	private final Map<WorldPoint, Integer> markPoints = new HashMap<>();
+	private final Map<WorldPoint, Integer> markTiles = new HashMap<>();
+	private final Set<WorldPoint> ignoreTiles = new HashSet<>();
 	private boolean isDirty;
 	private EvictingQueue<Duration> markSpawnTimes = EvictingQueue.create(10);
 
 	void addMarkTile(WorldPoint point, int markCount)
 	{
-		markPoints.put(point, markCount);
-		isDirty = true;
+		if (!ignoreTiles.contains(point))
+		{
+			markTiles.put(point, markCount);
+			isDirty = true;
+		}
+	}
+
+	void addIgnoreTile(WorldPoint point)
+	{
+		ignoreTiles.add(point);
 	}
 
 	void removeMarkTile(WorldPoint point)
 	{
-		markPoints.remove(point);
+		markTiles.remove(point);
 		isDirty = true;
+	}
+
+	void removeIgnoreTile(WorldPoint point)
+	{
+		ignoreTiles.remove(point);
 	}
 
 	void checkMarkSpawned()
@@ -73,14 +89,14 @@ class MOGSession
 		isDirty = false;
 
 		marksSpawned = 0;
-		for (int i : markPoints.values())
+		for (int i : markTiles.values())
 		{
 			marksSpawned += i;
 		}
 
-		Instant now = Instant.now();
 		if (marksSpawned > lastMarksSpawned)
 		{
+			Instant now = Instant.now();
 			if (lastMarkSpawnTime != null)
 			{
 				markSpawnTimes.add(Duration.between(lastMarkSpawnTime, now));
@@ -119,7 +135,8 @@ class MOGSession
 		marksSpawned = 0;
 		totalMarkSpawnEvents = 0;
 		spawnsPerHour = 0;
-		markPoints.clear();
+		markTiles.clear();
+		ignoreTiles.clear();
 		isDirty = false;
 	}
 
@@ -127,7 +144,8 @@ class MOGSession
 	{
 		marksSpawned = 0;
 		lastMarksSpawned = 0;
-		markPoints.clear();
+		markTiles.clear();
+		ignoreTiles.clear();
 		isDirty = false;
 	}
 }
