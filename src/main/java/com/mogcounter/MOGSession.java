@@ -80,7 +80,7 @@ class MOGSession
 		ignoreTiles.remove(point);
 	}
 
-	void checkMarkSpawned()
+	synchronized void checkMarkSpawned()
 	{
 		if (!isDirty)
 		{
