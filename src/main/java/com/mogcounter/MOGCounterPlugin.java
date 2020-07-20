@@ -153,7 +153,10 @@ public class MOGCounterPlugin extends Plugin
 	@Subscribe
 	public void onGameTick(GameTick tick)
 	{
-		mogSession.checkMarkSpawned();
+		if (mogSession != null)
+		{
+			mogSession.checkMarkSpawned();
+		}
 	}
 
 	@Subscribe
