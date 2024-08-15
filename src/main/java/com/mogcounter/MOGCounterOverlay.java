@@ -30,7 +30,6 @@ import java.awt.Graphics2D;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayMenuEntry;
 import net.runelite.client.ui.overlay.OverlayPosition;
-import net.runelite.client.ui.overlay.OverlayPriority;
 import net.runelite.client.ui.overlay.components.LineComponent;
 import net.runelite.client.ui.overlay.components.TitleComponent;
 import javax.inject.Inject;
@@ -52,7 +51,7 @@ class MOGCounterOverlay extends OverlayPanel
 	{
 		super(plugin);
 		setPosition(OverlayPosition.TOP_LEFT);
-		setPriority(OverlayPriority.LOW);
+		setPriority(PRIORITY_LOW);
 		this.plugin = plugin;
 		this.config = config;
 		getMenuEntries().add(new OverlayMenuEntry(RUNELITE_OVERLAY_CONFIG, OPTION_CONFIGURE, "Mark overlay"));
