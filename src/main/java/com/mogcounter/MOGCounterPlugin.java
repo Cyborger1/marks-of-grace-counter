@@ -25,7 +25,10 @@
  */
 package com.mogcounter;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provides;
+import java.time.Instant;
+import java.util.Set;
 import javax.inject.Inject;
 
 import lombok.Getter;
@@ -33,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.ItemID;
 import net.runelite.api.Player;
+import static net.runelite.api.Skill.AGILITY;
 import net.runelite.api.TileItem;
 import net.runelite.api.MenuAction;
 import net.runelite.api.coords.WorldPoint;
@@ -40,6 +44,7 @@ import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemDespawned;
 import net.runelite.api.events.ItemSpawned;
+import net.runelite.api.events.StatChanged;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.OverlayMenuClicked;
@@ -77,6 +82,33 @@ public class MOGCounterPlugin extends Plugin
 		return configManager.getConfig(MOGCounterConfig.class);
 	}
 
+	// From Agility plugin, some may not be relevant to this plugin but ehh
+	private final Set<WorldPoint> courseEndpoints = ImmutableSet.of(
+		new WorldPoint(2484, 3437, 0), // Gnome 1
+		new WorldPoint(2487, 3437, 0), // Gnome 2
+		new WorldPoint(1554, 3640, 0), // Shayzien Basic
+		new WorldPoint(3103, 3261, 0), // Draynor
+		new WorldPoint(3299, 3194, 0), // Al-Kharid
+		new WorldPoint(3364, 2830, 0), // Pyramid
+		new WorldPoint(3236, 3417, 0), // Varrock
+		new WorldPoint(2652, 4039, 1), // Penguin
+		new WorldPoint(2543, 3553, 0), // Barbarian
+		new WorldPoint(3510, 3485, 0), // Canifis
+		new WorldPoint(2770, 2747, 0), // Ape Atoll
+		new WorldPoint(1522, 3625, 0), // Shayzien Advanced
+		new WorldPoint(3029, 3332, 0), // Falador 1
+		new WorldPoint(3029, 3333, 0), // Falador 2
+		new WorldPoint(3029, 3334, 0), // Falador 3
+		new WorldPoint(3029, 3335, 0), // Falador 4
+		new WorldPoint(2994, 3933, 0), // Wilderness
+		new WorldPoint(3528, 9873, 0), // Werewolf
+		new WorldPoint(2704, 3464, 0), // Seers
+		new WorldPoint(3363, 2998, 0), // Pollnivneach
+		new WorldPoint(2653, 3676, 0), // Relleka
+		new WorldPoint(3240, 6109, 0), // Prifddinas
+		new WorldPoint(2668, 3297, 0)  // Ardougne
+	);
+
 	@Override
 	protected void startUp() throws Exception
 	{
@@ -106,6 +138,17 @@ public class MOGCounterPlugin extends Plugin
 					mogSession = new MOGSession();
 				}
 				break;
+		}
+	}
+
+	@Subscribe
+	public void onStatChanged(StatChanged statChanged)
+	{
+		if (mogSession != null
+			&& statChanged.getSkill() == AGILITY
+			&& courseEndpoints.contains(client.getLocalPlayer().getWorldLocation()))
+		{
+			mogSession.setLastLapTime(Instant.now());
 		}
 	}
 
@@ -155,7 +198,7 @@ public class MOGCounterPlugin extends Plugin
 	{
 		if (mogSession != null)
 		{
-			mogSession.checkMarkSpawned();
+			mogSession.checkMarkSpawned(config.useLapFinishTiming());
 		}
 	}
 

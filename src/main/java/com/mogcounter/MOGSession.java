@@ -28,6 +28,7 @@ package com.mogcounter;
 import com.google.common.collect.EvictingQueue;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import net.runelite.api.coords.WorldPoint;
 import java.time.Duration;
 import java.time.Instant;
@@ -45,6 +46,9 @@ class MOGSession
 	private int marksSpawned;
 	@Getter(AccessLevel.PACKAGE)
 	private Instant lastMarkSpawnTime;
+	@Getter(AccessLevel.PACKAGE)
+	@Setter(AccessLevel.PACKAGE)
+	private Instant lastLapTime;
 	@Getter(AccessLevel.PACKAGE)
 	private int totalMarkSpawnEvents;
 	@Getter(AccessLevel.PACKAGE)
@@ -80,7 +84,7 @@ class MOGSession
 		ignoreTiles.remove(point);
 	}
 
-	synchronized void checkMarkSpawned()
+	synchronized void checkMarkSpawned(boolean useLastLapTime)
 	{
 		if (!isDirty)
 		{
@@ -96,13 +100,13 @@ class MOGSession
 
 		if (marksSpawned > lastMarksSpawned)
 		{
-			Instant now = Instant.now();
+			Instant spawnMoment = (useLastLapTime && lastLapTime != null) ? lastLapTime : Instant.now();
 			if (lastMarkSpawnTime != null)
 			{
-				markSpawnTimes.add(Duration.between(lastMarkSpawnTime, now));
+				markSpawnTimes.add(Duration.between(lastMarkSpawnTime, spawnMoment));
 				calculateMarksPerHour();
 			}
-			lastMarkSpawnTime = now;
+			lastMarkSpawnTime = spawnMoment;
 			totalMarkSpawnEvents++;
 		}
 		lastMarksSpawned = marksSpawned;
@@ -131,6 +135,7 @@ class MOGSession
 	{
 		lastMarksSpawned = 0;
 		lastMarkSpawnTime = null;
+		lastLapTime = null;
 		markSpawnTimes.clear();
 		marksSpawned = 0;
 		totalMarkSpawnEvents = 0;

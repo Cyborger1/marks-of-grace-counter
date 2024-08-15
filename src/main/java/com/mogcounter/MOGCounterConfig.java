@@ -94,4 +94,15 @@ public interface MOGCounterConfig extends Config
 	{
 		return true;
 	}
+
+	@ConfigItem(
+		keyName = "useLapFinishTiming",
+		name = "Use Lap Finish Mark Timing",
+		description = "If checked, the last mark spawned timer will be based on the moment of the last finished lap. Otherwise, timer is based on the moment the mark is seen.",
+		position = 6
+	)
+	default boolean useLapFinishTiming()
+	{
+		return false;
+	}
 }
