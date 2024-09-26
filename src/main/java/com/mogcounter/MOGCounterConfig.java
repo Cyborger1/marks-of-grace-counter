@@ -105,4 +105,32 @@ public interface MOGCounterConfig extends Config
 	{
 		return false;
 	}
+
+	@ConfigItem(
+		keyName = "enableDespawnNotification",
+		name = "Notify Before Mark Despawn",
+		description = "Sends a notification if enough time has passed since last Mark spawn. Mostly intended for use with the Ardougne course.",
+		position = 7
+	)
+	default boolean enableDespawnNotification()
+	{
+		return false;
+	}
+
+	@Range
+	(
+		min = 60,
+		max = 600
+	)
+	@ConfigItem(
+		keyName = "markDespawnNotificationTime",
+		name = "Despawn Notification Time",
+		description = "Time until a despawn warning notification is sent (Uses 'Last Spawn Time')",
+		position = 8
+	)
+	@Units(Units.SECONDS)
+	default int markDespawnNotificationTime()
+	{
+		return 540;
+	}
 }

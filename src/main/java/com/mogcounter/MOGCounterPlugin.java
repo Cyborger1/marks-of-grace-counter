@@ -45,6 +45,7 @@ import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemDespawned;
 import net.runelite.api.events.ItemSpawned;
 import net.runelite.api.events.StatChanged;
+import net.runelite.client.Notifier;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.OverlayMenuClicked;
@@ -66,6 +67,9 @@ public class MOGCounterPlugin extends Plugin
 
 	@Inject
 	private OverlayManager overlayManager;
+
+	@Inject
+	private Notifier notifier;
 
 	@Inject
 	private MOGCounterConfig config;
@@ -199,6 +203,11 @@ public class MOGCounterPlugin extends Plugin
 		if (mogSession != null)
 		{
 			mogSession.checkMarkSpawned(config.useLapFinishTiming());
+			if (config.enableDespawnNotification()
+				&& mogSession.shouldNotifyDespawn(config.markDespawnNotificationTime()))
+			{
+				notifier.notify("Your Marks of Grace are about to despawn!");
+			}
 		}
 	}
 
