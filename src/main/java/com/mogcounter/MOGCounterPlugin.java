@@ -203,10 +203,9 @@ public class MOGCounterPlugin extends Plugin
 		if (mogSession != null)
 		{
 			mogSession.checkMarkSpawned(config.useLapFinishTiming());
-			if (config.enableDespawnNotification()
-				&& mogSession.shouldNotifyDespawn(config.markDespawnNotificationTime()))
+			if (mogSession.shouldNotifyDespawn(config.markDespawnNotificationTime()))
 			{
-				notifier.notify("Your Marks of Grace are about to despawn!");
+				notifier.notify(config.markDespawnNotification(), "Your Marks of Grace are about to despawn!");
 			}
 		}
 	}

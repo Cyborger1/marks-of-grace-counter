@@ -28,6 +28,7 @@ package com.mogcounter;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
+import net.runelite.client.config.Notification;
 import net.runelite.client.config.Range;
 import net.runelite.client.config.Units;
 
@@ -107,14 +108,14 @@ public interface MOGCounterConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "enableDespawnNotification",
+		keyName = "markDespawnNotification",
 		name = "Notify Before Mark Despawn",
 		description = "Sends a notification if enough time has passed since last Mark spawn. Mostly intended for use with the Ardougne course.",
 		position = 7
 	)
-	default boolean enableDespawnNotification()
+	default Notification markDespawnNotification()
 	{
-		return false;
+		return Notification.OFF;
 	}
 
 	@Range
