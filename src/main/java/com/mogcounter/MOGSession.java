@@ -57,6 +57,7 @@ class MOGSession
 	private final Map<WorldPoint, Integer> markTiles = new HashMap<>();
 	private final Set<WorldPoint> ignoreTiles = new HashSet<>();
 	private boolean isDirty;
+	private boolean wasNotifiedDespawn;
 	private EvictingQueue<Duration> markSpawnTimes = EvictingQueue.create(20);
 
 	void addMarkTile(WorldPoint point, int markCount)
@@ -107,9 +108,24 @@ class MOGSession
 				calculateMarksPerHour();
 			}
 			lastMarkSpawnTime = spawnMoment;
+			wasNotifiedDespawn = false;
 			totalMarkSpawnEvents++;
 		}
+
 		lastMarksSpawned = marksSpawned;
+	}
+
+	public boolean shouldNotifyDespawn(int timeoutSeconds)
+	{
+		if (wasNotifiedDespawn
+			|| lastMarksSpawned <= 0
+			|| timeoutSeconds > Duration.between(lastMarkSpawnTime, Instant.now()).getSeconds())
+		{
+			return false;
+		}
+
+		wasNotifiedDespawn = true;
+		return true;
 	}
 
 	private void calculateMarksPerHour()
@@ -143,6 +159,7 @@ class MOGSession
 		markTiles.clear();
 		ignoreTiles.clear();
 		isDirty = false;
+		wasNotifiedDespawn = false;
 	}
 
 	void clearSpawnedMarks()
@@ -152,5 +169,6 @@ class MOGSession
 		markTiles.clear();
 		ignoreTiles.clear();
 		isDirty = false;
+		wasNotifiedDespawn = false;
 	}
 }
