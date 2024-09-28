@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provides;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -247,9 +248,8 @@ public class MOGCounterPlugin extends Plugin
 		// Check session timeout
 		if (lastMarkSpawnTime != null)
 		{
-			Duration markTimeout = Duration.ofMinutes(config.markTimeout());
-			Duration sinceMark = Duration.between(lastMarkSpawnTime, Instant.now());
-			if (sinceMark.compareTo(markTimeout) >= 0)
+			Instant expire = Instant.now().minus(config.markTimeout(), ChronoUnit.MINUTES);
+			if (lastMarkSpawnTime.isBefore(expire))
 			{
 				clearCounters();
 				return;
@@ -327,8 +327,7 @@ public class MOGCounterPlugin extends Plugin
 			return;
 		}
 
-		Duration secs = Duration.ofSeconds(config.markDespawnNotificationTime());
-		Instant now = Instant.now();
+		Instant expire = Instant.now().minusSeconds(config.markDespawnNotificationTime());
 
 		boolean doNotify = false;
 		for (InstantCountTuple entry : markTiles.values())
@@ -342,7 +341,7 @@ public class MOGCounterPlugin extends Plugin
 				continue;
 			}
 
-			if (Duration.between(spawn, now).compareTo(secs) >= 0)
+			if (spawn.isBefore(expire))
 			{
 				lastDespawnNotified = spawn;
 				doNotify = true;
