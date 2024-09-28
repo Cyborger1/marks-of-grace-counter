@@ -128,10 +128,11 @@ public class MOGCounterPlugin extends Plugin
 	private int spawnsPerHour;
 
 	private final Map<WorldPoint, InstantCountTuple> markTiles = new HashMap<>();
+	private final Set<WorldPoint> potentialDespawns = new HashSet<>();
 	private final Set<WorldPoint> ignoreTiles = new HashSet<>();
 	private boolean doCheckGroundItems;
 	private Instant lastDespawnNotified;
-	private EvictingQueue<Duration> markSpawnTimes = EvictingQueue.create(20);
+	private final EvictingQueue<Duration> markSpawnTimes = EvictingQueue.create(20);
 
 	private final Supplier<Instant> markSpawnTimeSupplier = () -> lastLapTime != null && config.useLapFinishTiming() ? lastLapTime : Instant.now();
 
@@ -187,6 +188,9 @@ public class MOGCounterPlugin extends Plugin
 		}
 
 		WorldPoint wp = itemSpawned.getTile().getWorldLocation();
+		// Means we had a despawn/respawn in the same tick, do not clear in onGameTick
+		potentialDespawns.remove(wp);
+
 		if (wp.equals(player.getWorldLocation()) || ignoreTiles.contains(wp))
 		{
 			ignoreTiles.add(wp);
@@ -232,12 +236,9 @@ public class MOGCounterPlugin extends Plugin
 		}
 
 		WorldPoint wp = itemDespawned.getTile().getWorldLocation();
-		if (wp.equals(player.getWorldLocation()))
-		{
-			ignoreTiles.remove(wp);
-		}
-		markTiles.remove(wp);
-		doCheckGroundItems = true;
+		// Marks are despawned then immediately spawned again when changing floor
+		// Only remove from markTiles if no respawn seen before onGameTick
+		potentialDespawns.add(wp);
 	}
 
 	@Subscribe
@@ -253,6 +254,22 @@ public class MOGCounterPlugin extends Plugin
 				clearCounters();
 				return;
 			}
+		}
+
+		// Some marks were fully despawned, clean them up here
+		if (potentialDespawns.size() > 0)
+		{
+			Player player = client.getLocalPlayer();
+			for (WorldPoint wp : potentialDespawns)
+			{
+				markTiles.remove(wp);
+				if (player != null && wp.equals(player.getWorldLocation()))
+				{
+					ignoreTiles.remove(wp);
+				}
+			}
+			potentialDespawns.clear();
+			doCheckGroundItems = true;
 		}
 
 		checkMarkSpawned();
@@ -362,6 +379,7 @@ public class MOGCounterPlugin extends Plugin
 		spawnsPerHour = 0;
 		markTiles.clear();
 		ignoreTiles.clear();
+		potentialDespawns.clear();
 		doCheckGroundItems = false;
 		lastDespawnNotified = null;
 	}
@@ -371,6 +389,7 @@ public class MOGCounterPlugin extends Plugin
 		marksOnGround = 0;
 		markTiles.clear();
 		ignoreTiles.clear();
+		potentialDespawns.clear();
 		doCheckGroundItems = false;
 		lastDespawnNotified = null;
 	}

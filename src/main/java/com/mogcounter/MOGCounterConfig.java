@@ -132,6 +132,6 @@ public interface MOGCounterConfig extends Config
 	@Units(Units.SECONDS)
 	default int markDespawnNotificationTime()
 	{
-		return 540;
+		return 480;
 	}
 }
