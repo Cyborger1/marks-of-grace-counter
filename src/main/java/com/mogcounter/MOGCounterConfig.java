@@ -53,7 +53,7 @@ public interface MOGCounterConfig extends Config
 	)
 	@ConfigItem(
 		keyName = "markTimeout",
-		name = "Hide Overlay",
+		name = "Reset Overlay Time",
 		description = "Time until the Marks of Grace Counter hides/resets (Uses 'Last Spawn Time')",
 		position = 2
 	)
@@ -120,7 +120,7 @@ public interface MOGCounterConfig extends Config
 
 	@Range
 	(
-		min = 60,
+		min = 1,
 		max = 600
 	)
 	@ConfigItem(

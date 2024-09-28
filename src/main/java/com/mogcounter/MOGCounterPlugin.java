@@ -244,12 +244,15 @@ public class MOGCounterPlugin extends Plugin
 	public void onGameTick(GameTick tick)
 	{
 		// Check session timeout
-		Duration markTimeout = Duration.ofMinutes(config.markTimeout());
-		Duration sinceMark = Duration.between(lastMarkSpawnTime, Instant.now());
-		if (sinceMark.compareTo(markTimeout) >= 0)
+		if (lastMarkSpawnTime != null)
 		{
-			clearCounters();
-			return;
+			Duration markTimeout = Duration.ofMinutes(config.markTimeout());
+			Duration sinceMark = Duration.between(lastMarkSpawnTime, Instant.now());
+			if (sinceMark.compareTo(markTimeout) >= 0)
+			{
+				clearCounters();
+				return;
+			}
 		}
 
 		checkMarkSpawned();
@@ -307,7 +310,7 @@ public class MOGCounterPlugin extends Plugin
 			return;
 		}
 
-		int secs = config.markDespawnNotificationTime();
+		Duration secs = Duration.ofSeconds(config.markDespawnNotificationTime());
 		Instant now = Instant.now();
 
 		boolean doNotify = false;
@@ -322,7 +325,7 @@ public class MOGCounterPlugin extends Plugin
 				continue;
 			}
 
-			if (secs <= Duration.between(spawn, now).getSeconds())
+			if (Duration.between(spawn, now).compareTo(secs) >= 0)
 			{
 				lastDespawnNotified = spawn;
 				doNotify = true;
