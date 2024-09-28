@@ -62,22 +62,19 @@ class MOGCounterOverlay extends OverlayPanel
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
-		MOGSession session = plugin.getMogSession();
-
 		if (!config.showMarkCount() ||
-			session == null ||
-			session.getLastMarkSpawnTime() == null)
+			plugin.getLastMarkSpawnTime() == null)
 		{
 			return null;
 		}
 
 		Duration markTimeout = Duration.ofMinutes(config.markTimeout());
-		Duration sinceMark = Duration.between(session.getLastMarkSpawnTime(), Instant.now());
+		Duration sinceMark = Duration.between(plugin.getLastMarkSpawnTime(), Instant.now());
 
 		if (sinceMark.compareTo(markTimeout) >= 0)
 		{
 			// timeout session
-			session.clearCounters();
+			plugin.clearCounters();
 			return null;
 		}
 
@@ -85,14 +82,14 @@ class MOGCounterOverlay extends OverlayPanel
 
 		panelComponent.getChildren().add(LineComponent.builder()
 			.left("Total Spawns:")
-			.right(Integer.toString(session.getTotalMarkSpawnEvents()))
+			.right(Integer.toString(plugin.getMarkSpawnEvents()))
 			.build());
 
 		if (config.showMarksSpawned())
 		{
 			panelComponent.getChildren().add(LineComponent.builder()
 				.left("Marks on Ground:")
-				.right(Integer.toString(session.getMarksSpawned()))
+				.right(Integer.toString(plugin.getMarksOnGround()))
 				.build());
 		}
 
@@ -105,11 +102,11 @@ class MOGCounterOverlay extends OverlayPanel
 				.build());
 		}
 
-		if (config.showMarksPerHour() && session.getTotalMarkSpawnEvents() >= 2)
+		if (config.showMarksPerHour() && plugin.getMarkSpawnEvents() >= 2)
 		{
 			panelComponent.getChildren().add(LineComponent.builder()
 				.left("Spawns per Hour:")
-				.right(Integer.toString(session.getSpawnsPerHour()))
+				.right(Integer.toString(plugin.getSpawnsPerHour()))
 				.build());
 		}
 
