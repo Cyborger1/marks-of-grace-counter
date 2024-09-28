@@ -110,7 +110,7 @@ public interface MOGCounterConfig extends Config
 	@ConfigItem(
 		keyName = "markDespawnNotification",
 		name = "Notify Before Mark Despawn",
-		description = "Sends a notification if enough time has passed since last Mark spawn. Mostly intended for use with the Ardougne course.",
+		description = "Sends a notification if enough time has passed since a Mark spawned. Mostly intended for use with the Ardougne course.",
 		position = 7
 	)
 	default Notification markDespawnNotification()
@@ -126,7 +126,7 @@ public interface MOGCounterConfig extends Config
 	@ConfigItem(
 		keyName = "markDespawnNotificationTime",
 		name = "Despawn Notification Time",
-		description = "Time until a despawn warning notification is sent (Uses 'Last Spawn Time')",
+		description = "Time until a despawn warning notification is sent for any given Mark stack",
 		position = 8
 	)
 	@Units(Units.SECONDS)

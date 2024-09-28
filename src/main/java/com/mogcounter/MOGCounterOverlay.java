@@ -68,16 +68,6 @@ class MOGCounterOverlay extends OverlayPanel
 			return null;
 		}
 
-		Duration markTimeout = Duration.ofMinutes(config.markTimeout());
-		Duration sinceMark = Duration.between(plugin.getLastMarkSpawnTime(), Instant.now());
-
-		if (sinceMark.compareTo(markTimeout) >= 0)
-		{
-			// timeout session
-			plugin.clearCounters();
-			return null;
-		}
-
 		panelComponent.getChildren().add(TitleComponent.builder().text("Marks of Grace").build());
 
 		panelComponent.getChildren().add(LineComponent.builder()
@@ -95,7 +85,7 @@ class MOGCounterOverlay extends OverlayPanel
 
 		if (config.showMarkLastSpawn())
 		{
-			long s = sinceMark.getSeconds();
+			long s = Duration.between(plugin.getLastMarkSpawnTime(), Instant.now()).getSeconds();
 			panelComponent.getChildren().add(LineComponent.builder()
 				.left("Last Spawn:")
 				.right(String.format("%d:%02d", (s % 3600) / 60, (s % 60)))

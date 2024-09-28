@@ -26,13 +26,13 @@
 package com.mogcounter;
 
 import java.time.Instant;
-import lombok.Builder;
-import lombok.Value;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
-@Builder
-@Value
+@Data
+@AllArgsConstructor
 public class InstantCountTuple
 {
-	Instant instant;
-	int count;
+	private Instant instant;
+	private int count;
 }

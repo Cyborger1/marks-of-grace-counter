@@ -130,7 +130,7 @@ public class MOGCounterPlugin extends Plugin
 	private final Map<WorldPoint, InstantCountTuple> markTiles = new HashMap<>();
 	private final Set<WorldPoint> ignoreTiles = new HashSet<>();
 	private boolean doCheckGroundItems;
-	private boolean wasNotifiedDespawn;
+	private Instant lastDespawnNotified;
 	private EvictingQueue<Duration> markSpawnTimes = EvictingQueue.create(20);
 
 	private final Supplier<Instant> markSpawnTimeSupplier = () -> lastLapTime != null && config.useLapFinishTiming() ? lastLapTime : Instant.now();
@@ -175,29 +175,44 @@ public class MOGCounterPlugin extends Plugin
 	public void onItemSpawned(ItemSpawned itemSpawned)
 	{
 		final TileItem item = itemSpawned.getItem();
-		if (item.getId() == ItemID.MARK_OF_GRACE)
+		if (item.getId() != ItemID.MARK_OF_GRACE)
 		{
-			WorldPoint wp = itemSpawned.getTile().getWorldLocation();
-			Player player = client.getLocalPlayer();
-			if (player != null)
+			return;
+		}
+
+		Player player = client.getLocalPlayer();
+		if (player == null)
+		{
+			return;
+		}
+
+		WorldPoint wp = itemSpawned.getTile().getWorldLocation();
+		if (wp.equals(player.getWorldLocation()) || ignoreTiles.contains(wp))
+		{
+			ignoreTiles.add(wp);
+			return;
+		}
+
+		InstantCountTuple tuple;
+		if (!markTiles.containsKey(wp))
+		{
+			tuple = new InstantCountTuple(null, 0);
+			markTiles.put(wp, tuple);
+		}
+		else
+		{
+			tuple = markTiles.get(wp);
+		}
+
+		int newCount = item.getQuantity();
+		if (newCount != tuple.getCount())
+		{
+			if (newCount > tuple.getCount())
 			{
-				if (wp.equals(player.getWorldLocation()))
-				{
-					ignoreTiles.add(wp);
-				}
-				else
-				{
-					if (!markTiles.containsKey(wp) || item.getQuantity() != markTiles.get(wp).getCount())
-					{
-						markTiles.put(wp,
-							InstantCountTuple.builder()
-								.count(item.getQuantity())
-								.instant(markSpawnTimeSupplier.get())
-								.build());
-						doCheckGroundItems = true;
-					}
-				}
+				tuple.setInstant(markSpawnTimeSupplier.get());
 			}
+			tuple.setCount(newCount);
+			doCheckGroundItems = true;
 		}
 	}
 
@@ -205,33 +220,40 @@ public class MOGCounterPlugin extends Plugin
 	public void onItemDespawned(ItemDespawned itemDespawned)
 	{
 		final TileItem item = itemDespawned.getItem();
-		if (item.getId() == ItemID.MARK_OF_GRACE)
+		if (item.getId() != ItemID.MARK_OF_GRACE)
 		{
-			WorldPoint wp = itemDespawned.getTile().getWorldLocation();
-			Player player = client.getLocalPlayer();
-			if (player != null)
-			{
-				if (wp.equals(player.getWorldLocation()))
-				{
-					ignoreTiles.remove(wp);
-				}
-				markTiles.remove(wp);
-				doCheckGroundItems = true;
-			}
+			return;
 		}
+
+		Player player = client.getLocalPlayer();
+		if (player == null)
+		{
+			return;
+		}
+
+		WorldPoint wp = itemDespawned.getTile().getWorldLocation();
+		if (wp.equals(player.getWorldLocation()))
+		{
+			ignoreTiles.remove(wp);
+		}
+		markTiles.remove(wp);
+		doCheckGroundItems = true;
 	}
 
 	@Subscribe
 	public void onGameTick(GameTick tick)
 	{
-		checkMarkSpawned();
-		if (wasNotifiedDespawn
-			|| marksOnGround <= 0
-			|| config.markDespawnNotificationTime() > Duration.between(lastMarkSpawnTime, Instant.now()).getSeconds())
+		// Check session timeout
+		Duration markTimeout = Duration.ofMinutes(config.markTimeout());
+		Duration sinceMark = Duration.between(lastMarkSpawnTime, Instant.now());
+		if (sinceMark.compareTo(markTimeout) >= 0)
 		{
-			wasNotifiedDespawn = true;
-			notifier.notify(config.markDespawnNotification(), "Your Marks of Grace are about to despawn!");
+			clearCounters();
+			return;
 		}
+
+		checkMarkSpawned();
+		notifyDespawns();
 	}
 
 	@Subscribe
@@ -272,11 +294,45 @@ public class MOGCounterPlugin extends Plugin
 				calculateMarksPerHour();
 			}
 			lastMarkSpawnTime = spawnMoment;
-			wasNotifiedDespawn = false;
 			markSpawnEvents++;
 		}
 
 		marksOnGround = newMarksOnGround;
+	}
+
+	private void notifyDespawns()
+	{
+		if (marksOnGround <= 0)
+		{
+			return;
+		}
+
+		int secs = config.markDespawnNotificationTime();
+		Instant now = Instant.now();
+
+		boolean doNotify = false;
+		for (InstantCountTuple entry : markTiles.values())
+		{
+			int count = entry.getCount();
+			Instant spawn = entry.getInstant();
+
+			if (count <= 0 || spawn == null
+				|| (lastDespawnNotified != null && spawn.compareTo(lastDespawnNotified) <= 0))
+			{
+				continue;
+			}
+
+			if (secs <= Duration.between(spawn, now).getSeconds())
+			{
+				lastDespawnNotified = spawn;
+				doNotify = true;
+			}
+		}
+
+		if (doNotify)
+		{
+			notifier.notify(config.markDespawnNotification(), "One of your Marks of Grace stacks is about to despawn!");
+		}
 	}
 
 	private void calculateMarksPerHour()
@@ -304,7 +360,7 @@ public class MOGCounterPlugin extends Plugin
 		markTiles.clear();
 		ignoreTiles.clear();
 		doCheckGroundItems = false;
-		wasNotifiedDespawn = false;
+		lastDespawnNotified = null;
 	}
 
 	public void clearSpawnedMarks()
@@ -313,6 +369,6 @@ public class MOGCounterPlugin extends Plugin
 		markTiles.clear();
 		ignoreTiles.clear();
 		doCheckGroundItems = false;
-		wasNotifiedDespawn = false;
+		lastDespawnNotified = null;
 	}
 }
