@@ -120,7 +120,7 @@ public interface MOGCounterConfig extends Config
 
 	@Range
 	(
-		min = 1,
+		min = 60,
 		max = 600
 	)
 	@ConfigItem(
