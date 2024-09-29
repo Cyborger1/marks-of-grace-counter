@@ -349,7 +349,10 @@ public class MOGCounterPlugin extends Plugin
 
 		if (doNotify)
 		{
-			notifier.notify(config.markDespawnNotification(), "One of your Marks of Grace stacks is about to despawn!");
+			String text = markTiles.size() > 1 ?
+				"One of your Marks of Grace stacks is about to despawn!" :
+				"Your Marks of Grace stack is about to despawn!";
+			notifier.notify(config.markDespawnNotification(), text);
 		}
 	}
 
