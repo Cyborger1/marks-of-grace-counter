@@ -62,58 +62,47 @@ class MOGCounterOverlay extends OverlayPanel
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
-		MOGSession session = plugin.getMogSession();
-
 		if (!config.showMarkCount() ||
-			session == null ||
-			session.getLastMarkSpawnTime() == null)
+			plugin.getLastMarkSpawnTime() == null)
 		{
-			return null;
-		}
-
-		Duration markTimeout = Duration.ofMinutes(config.markTimeout());
-		Duration sinceMark = Duration.between(session.getLastMarkSpawnTime(), Instant.now());
-
-		if (sinceMark.compareTo(markTimeout) >= 0)
-		{
-			// timeout session
-			session.clearCounters();
 			return null;
 		}
 
 		panelComponent.getChildren().add(TitleComponent.builder().text("Marks of Grace").build());
 
-		panelComponent.getChildren().add(LineComponent.builder()
-			.left("Total Spawns:")
-			.right(Integer.toString(session.getTotalMarkSpawnEvents()))
-			.build());
+		addLine("Total Spawns:", plugin.getMarkSpawnEvents());
 
 		if (config.showMarksSpawned())
 		{
-			panelComponent.getChildren().add(LineComponent.builder()
-				.left("Marks on Ground:")
-				.right(Integer.toString(session.getMarksSpawned()))
-				.build());
+			addLine("# on Ground:", plugin.getMarksOnGround());
 		}
 
 		if (config.showMarkLastSpawn())
 		{
-			long s = sinceMark.getSeconds();
-			panelComponent.getChildren().add(LineComponent.builder()
-				.left("Last Spawn:")
-				.right(String.format("%d:%02d", (s % 3600) / 60, (s % 60)))
-				.build());
+			long s = Duration.between(plugin.getLastMarkSpawnTime(), Instant.now()).getSeconds();
+			addLine("Last Spawn:", String.format("%d:%02d", (s % 3600) / 60, (s % 60)));
 		}
 
-		if (config.showMarksPerHour() && session.getTotalMarkSpawnEvents() >= 2)
+		if (config.showMarksPerHour() && plugin.getMarkSpawnEvents() >= 2)
 		{
-			panelComponent.getChildren().add(LineComponent.builder()
-				.left("Spawns per Hour:")
-				.right(Integer.toString(session.getSpawnsPerHour()))
-				.build());
+			addLine("Spawns/Hour:", plugin.getSpawnsPerHour());
 		}
 
 
 		return super.render(graphics);
+	}
+
+	private void addLine(String left, String right)
+	{
+		panelComponent.getChildren().add(
+			LineComponent.builder()
+				.left(left)
+				.right(right)
+				.build());
+	}
+
+	private void addLine(String left, int right)
+	{
+		addLine(left, Integer.toString(right));
 	}
 }

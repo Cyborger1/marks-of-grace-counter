@@ -53,7 +53,7 @@ public interface MOGCounterConfig extends Config
 	)
 	@ConfigItem(
 		keyName = "markTimeout",
-		name = "Hide Overlay",
+		name = "Reset Overlay Time",
 		description = "Time until the Marks of Grace Counter hides/resets (Uses 'Last Spawn Time')",
 		position = 2
 	)
@@ -110,7 +110,7 @@ public interface MOGCounterConfig extends Config
 	@ConfigItem(
 		keyName = "markDespawnNotification",
 		name = "Notify Before Mark Despawn",
-		description = "Sends a notification if enough time has passed since last Mark spawn. Mostly intended for use with the Ardougne course.",
+		description = "Sends a notification if enough time has passed since a Mark spawned. Mostly intended for use with the Ardougne course.",
 		position = 7
 	)
 	default Notification markDespawnNotification()
@@ -120,18 +120,18 @@ public interface MOGCounterConfig extends Config
 
 	@Range
 	(
-		min = 60,
+		min = 1,
 		max = 600
 	)
 	@ConfigItem(
 		keyName = "markDespawnNotificationTime",
 		name = "Despawn Notification Time",
-		description = "Time until a despawn warning notification is sent (Uses 'Last Spawn Time')",
+		description = "Time until a despawn warning notification is sent for any given Mark stack",
 		position = 8
 	)
 	@Units(Units.SECONDS)
 	default int markDespawnNotificationTime()
 	{
-		return 540;
+		return 480;
 	}
 }

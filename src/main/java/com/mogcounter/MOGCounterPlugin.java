@@ -25,10 +25,17 @@
  */
 package com.mogcounter;
 
+import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Provides;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import javax.inject.Inject;
 
 import lombok.Getter;
@@ -77,9 +84,6 @@ public class MOGCounterPlugin extends Plugin
 	@Inject
 	private MOGCounterOverlay mogOverlay;
 
-	@Getter
-	private MOGSession mogSession;
-
 	@Provides
 	MOGCounterConfig getConfig(ConfigManager configManager)
 	{
@@ -113,18 +117,38 @@ public class MOGCounterPlugin extends Plugin
 		new WorldPoint(2668, 3297, 0)  // Ardougne
 	);
 
+	@Getter
+	private int marksOnGround;
+	@Getter
+	private Instant lastMarkSpawnTime;
+	@Getter
+	private Instant lastLapTime;
+	@Getter
+	private int markSpawnEvents;
+	@Getter
+	private int spawnsPerHour;
+
+	private final Map<WorldPoint, InstantCountTuple> markTiles = new HashMap<>();
+	private final Set<WorldPoint> potentialDespawns = new HashSet<>();
+	private final Set<WorldPoint> ignoreTiles = new HashSet<>();
+	private boolean doCheckGroundItems;
+	private Instant lastDespawnNotified;
+	private final EvictingQueue<Duration> markSpawnTimes = EvictingQueue.create(20);
+
+	private final Supplier<Instant> markSpawnTimeSupplier = () -> lastLapTime != null && config.useLapFinishTiming() ? lastLapTime : Instant.now();
+
 	@Override
 	protected void startUp() throws Exception
 	{
 		overlayManager.add(mogOverlay);
-		mogSession = new MOGSession();
+		clearCounters();
 	}
 
 	@Override
 	protected void shutDown() throws Exception
 	{
 		overlayManager.remove(mogOverlay);
-		mogSession = null;
+		clearCounters();
 	}
 
 	@Subscribe
@@ -134,13 +158,7 @@ public class MOGCounterPlugin extends Plugin
 		{
 			case HOPPING:
 			case LOGIN_SCREEN:
-				mogSession = null;
-				break;
-			case LOGGED_IN:
-				if (mogSession == null)
-				{
-					mogSession = new MOGSession();
-				}
+				clearCounters();
 				break;
 		}
 	}
@@ -148,11 +166,10 @@ public class MOGCounterPlugin extends Plugin
 	@Subscribe
 	public void onStatChanged(StatChanged statChanged)
 	{
-		if (mogSession != null
-			&& statChanged.getSkill() == AGILITY
+		if (statChanged.getSkill() == AGILITY
 			&& courseEndpoints.contains(client.getLocalPlayer().getWorldLocation()))
 		{
-			mogSession.setLastLapTime(Instant.now());
+			lastLapTime = Instant.now();
 		}
 	}
 
@@ -160,21 +177,47 @@ public class MOGCounterPlugin extends Plugin
 	public void onItemSpawned(ItemSpawned itemSpawned)
 	{
 		final TileItem item = itemSpawned.getItem();
-		if (item.getId() == ItemID.MARK_OF_GRACE)
+		if (item.getId() != ItemID.MARK_OF_GRACE)
 		{
-			WorldPoint wp = itemSpawned.getTile().getWorldLocation();
-			Player player = client.getLocalPlayer();
-			if (player != null)
+			return;
+		}
+
+		Player player = client.getLocalPlayer();
+		if (player == null)
+		{
+			return;
+		}
+
+		WorldPoint wp = itemSpawned.getTile().getWorldLocation();
+		// Means we had a despawn/respawn in the same tick, do not clear in onGameTick
+		potentialDespawns.remove(wp);
+
+		if (wp.equals(player.getWorldLocation()) || ignoreTiles.contains(wp))
+		{
+			ignoreTiles.add(wp);
+			return;
+		}
+
+		InstantCountTuple tuple;
+		if (!markTiles.containsKey(wp))
+		{
+			tuple = new InstantCountTuple(null, 0);
+			markTiles.put(wp, tuple);
+		}
+		else
+		{
+			tuple = markTiles.get(wp);
+		}
+
+		int newCount = item.getQuantity();
+		if (newCount != tuple.getCount())
+		{
+			if (newCount > tuple.getCount())
 			{
-				if (wp.equals(player.getWorldLocation()))
-				{
-					mogSession.addIgnoreTile(wp);
-				}
-				else
-				{
-					mogSession.addMarkTile(wp, item.getQuantity());
-				}
+				tuple.setInstant(markSpawnTimeSupplier.get());
 			}
+			tuple.setCount(newCount);
+			doCheckGroundItems = true;
 		}
 	}
 
@@ -182,32 +225,55 @@ public class MOGCounterPlugin extends Plugin
 	public void onItemDespawned(ItemDespawned itemDespawned)
 	{
 		final TileItem item = itemDespawned.getItem();
-		if (item.getId() == ItemID.MARK_OF_GRACE)
+		if (item.getId() != ItemID.MARK_OF_GRACE)
 		{
-			WorldPoint wp = itemDespawned.getTile().getWorldLocation();
-			Player player = client.getLocalPlayer();
-			if (player != null)
-			{
-				if (wp.equals(player.getWorldLocation()))
-				{
-					mogSession.removeIgnoreTile(wp);
-				}
-				mogSession.removeMarkTile(wp);
-			}
+			return;
 		}
+
+		Player player = client.getLocalPlayer();
+		if (player == null)
+		{
+			return;
+		}
+
+		WorldPoint wp = itemDespawned.getTile().getWorldLocation();
+		// Marks are despawned then immediately spawned again when changing floor
+		// Only remove from markTiles if no respawn seen before onGameTick
+		potentialDespawns.add(wp);
 	}
 
 	@Subscribe
 	public void onGameTick(GameTick tick)
 	{
-		if (mogSession != null)
+		// Check session timeout
+		if (lastMarkSpawnTime != null)
 		{
-			mogSession.checkMarkSpawned(config.useLapFinishTiming());
-			if (mogSession.shouldNotifyDespawn(config.markDespawnNotificationTime()))
+			Instant expire = Instant.now().minus(config.markTimeout(), ChronoUnit.MINUTES);
+			if (lastMarkSpawnTime.isBefore(expire))
 			{
-				notifier.notify(config.markDespawnNotification(), "Your Marks of Grace are about to despawn!");
+				clearCounters();
+				return;
 			}
 		}
+
+		// Some marks were fully despawned, clean them up here
+		if (potentialDespawns.size() > 0)
+		{
+			Player player = client.getLocalPlayer();
+			for (WorldPoint wp : potentialDespawns)
+			{
+				markTiles.remove(wp);
+				if (player != null && wp.equals(player.getWorldLocation()))
+				{
+					ignoreTiles.remove(wp);
+				}
+			}
+			potentialDespawns.clear();
+			doCheckGroundItems = true;
+		}
+
+		checkMarkSpawned();
+		notifyDespawns();
 	}
 
 	@Subscribe
@@ -220,12 +286,109 @@ public class MOGCounterPlugin extends Plugin
 			switch (overlayMenuClicked.getEntry().getOption())
 			{
 				case MOGCounterOverlay.MARK_CLEAR:
-					mogSession.clearCounters();
+					clearCounters();
 					break;
 				case MOGCounterOverlay.GROUND_RESET:
-					mogSession.clearSpawnedMarks();
+					clearSpawnedMarks();
 					break;
 			}
 		}
+	}
+
+	private synchronized void checkMarkSpawned()
+	{
+		if (!doCheckGroundItems)
+		{
+			return;
+		}
+		doCheckGroundItems = false;
+
+		int newMarksOnGround = markTiles.values().stream().mapToInt(InstantCountTuple::getCount).sum();
+
+		if (newMarksOnGround > marksOnGround)
+		{
+			Instant spawnMoment = markSpawnTimeSupplier.get();
+			if (lastMarkSpawnTime != null)
+			{
+				markSpawnTimes.add(Duration.between(lastMarkSpawnTime, spawnMoment));
+				calculateMarksPerHour();
+			}
+			lastMarkSpawnTime = spawnMoment;
+			markSpawnEvents++;
+		}
+
+		marksOnGround = newMarksOnGround;
+	}
+
+	private void notifyDespawns()
+	{
+		if (marksOnGround <= 0 || markTiles.isEmpty())
+		{
+			return;
+		}
+
+		Instant expire = Instant.now().minusSeconds(config.markDespawnNotificationTime());
+		boolean doNotify = false;
+		for (InstantCountTuple entry : markTiles.values())
+		{
+			int count = entry.getCount();
+			Instant spawn = entry.getInstant();
+
+			if (count <= 0 || spawn == null
+				|| (lastDespawnNotified != null && spawn.compareTo(lastDespawnNotified) <= 0))
+			{
+				continue;
+			}
+
+			if (spawn.isBefore(expire))
+			{
+				lastDespawnNotified = spawn;
+				doNotify = true;
+			}
+		}
+
+		if (doNotify)
+		{
+			notifier.notify(config.markDespawnNotification(), "One of your Marks of Grace stacks is about to despawn!");
+		}
+	}
+
+	private void calculateMarksPerHour()
+	{
+		int sz = markSpawnTimes.size();
+		if (sz > 0)
+		{
+			Duration sum = markSpawnTimes.stream().reduce(Duration.ZERO, Duration::plus);
+			spawnsPerHour = (int) (Duration.ofHours(1).toMillis() / sum.dividedBy(sz).toMillis());
+		}
+		else
+		{
+			spawnsPerHour = 0;
+		}
+	}
+
+	public void clearCounters()
+	{
+		lastMarkSpawnTime = null;
+		lastLapTime = null;
+		markSpawnTimes.clear();
+		marksOnGround = 0;
+		markSpawnEvents = 0;
+		spawnsPerHour = 0;
+		markTiles.clear();
+		ignoreTiles.clear();
+		potentialDespawns.clear();
+		doCheckGroundItems = false;
+		lastDespawnNotified = null;
+	}
+
+	public void clearSpawnedMarks()
+	{
+		marksOnGround = 0;
+		markTiles.clear();
+		ignoreTiles.clear();
+		potentialDespawns.clear();
+		doCheckGroundItems = false;
+		lastDespawnNotified = null;
 	}
 }
