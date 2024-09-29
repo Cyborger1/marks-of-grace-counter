@@ -12,6 +12,9 @@ The plugin provides the following metrics:
 * The time passed since the last spawn.
 * The estimated amount of Mark spawns per hour.
     * Appears after getting at least 2 spawns.
+ 
+The plugin can also notify you if one of your mark
+stacks is about to despawn.
     
 ## Known Issues
 * The plugin tries to remember where you dropped
