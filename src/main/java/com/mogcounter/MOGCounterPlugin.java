@@ -322,13 +322,12 @@ public class MOGCounterPlugin extends Plugin
 
 	private void notifyDespawns()
 	{
-		if (marksOnGround <= 0)
+		if (marksOnGround <= 0 || markTiles.isEmpty())
 		{
 			return;
 		}
 
 		Instant expire = Instant.now().minusSeconds(config.markDespawnNotificationTime());
-
 		boolean doNotify = false;
 		for (InstantCountTuple entry : markTiles.values())
 		{

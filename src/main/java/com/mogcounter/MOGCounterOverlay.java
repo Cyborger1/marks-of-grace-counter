@@ -70,37 +70,39 @@ class MOGCounterOverlay extends OverlayPanel
 
 		panelComponent.getChildren().add(TitleComponent.builder().text("Marks of Grace").build());
 
-		panelComponent.getChildren().add(LineComponent.builder()
-			.left("Total Spawns:")
-			.right(Integer.toString(plugin.getMarkSpawnEvents()))
-			.build());
+		addLine("Total Spawns:", plugin.getMarkSpawnEvents());
 
 		if (config.showMarksSpawned())
 		{
-			panelComponent.getChildren().add(LineComponent.builder()
-				.left("Marks on Ground:")
-				.right(Integer.toString(plugin.getMarksOnGround()))
-				.build());
+			addLine("# on Ground:", plugin.getMarksOnGround());
 		}
 
 		if (config.showMarkLastSpawn())
 		{
 			long s = Duration.between(plugin.getLastMarkSpawnTime(), Instant.now()).getSeconds();
-			panelComponent.getChildren().add(LineComponent.builder()
-				.left("Last Spawn:")
-				.right(String.format("%d:%02d", (s % 3600) / 60, (s % 60)))
-				.build());
+			addLine("Last Spawn:", String.format("%d:%02d", (s % 3600) / 60, (s % 60)));
 		}
 
 		if (config.showMarksPerHour() && plugin.getMarkSpawnEvents() >= 2)
 		{
-			panelComponent.getChildren().add(LineComponent.builder()
-				.left("Spawns per Hour:")
-				.right(Integer.toString(plugin.getSpawnsPerHour()))
-				.build());
+			addLine("Spawns/Hour:", plugin.getSpawnsPerHour());
 		}
 
 
 		return super.render(graphics);
+	}
+
+	private void addLine(String left, String right)
+	{
+		panelComponent.getChildren().add(
+			LineComponent.builder()
+				.left(left)
+				.right(right)
+				.build());
+	}
+
+	private void addLine(String left, int right)
+	{
+		addLine(left, Integer.toString(right));
 	}
 }
