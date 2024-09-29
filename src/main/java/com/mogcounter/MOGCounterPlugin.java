@@ -257,7 +257,7 @@ public class MOGCounterPlugin extends Plugin
 		}
 
 		// Some marks were fully despawned, clean them up here
-		if (potentialDespawns.size() > 0)
+		if (!potentialDespawns.isEmpty())
 		{
 			Player player = client.getLocalPlayer();
 			for (WorldPoint wp : potentialDespawns)
