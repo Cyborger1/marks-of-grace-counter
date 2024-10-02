@@ -86,10 +86,32 @@ public interface MOGCounterConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "showMarkLastSpawnMinute",
+		name = "Show Time Since Last Spawn (M)",
+		description = "Shows the time since the last Mark of Grace spawned, but counting from the start of the minute",
+		position = 5
+	)
+	default boolean showMarkLastSpawnMinute()
+	{
+		return false;
+	}
+
+	@ConfigItem(
+		keyName = "showMarkLastSpawnJagexMinute",
+		name = "Show Time Since Last Spawn (J)",
+		description = "Shows the time since the last Mark of Grace spawned, but counting from the start of the last Jagex minute",
+		position = 6
+	)
+	default boolean showMarkLastSpawnJagexMinute()
+	{
+		return false;
+	}
+
+	@ConfigItem(
 		keyName = "showMarksPerHour",
 		name = "Show Spawns per Hour",
 		description = "Shows the estimated amount of Mark spawns per hour (After getting 2 spawns)",
-		position = 5
+		position = 7
 	)
 	default boolean showMarksPerHour()
 	{
@@ -100,7 +122,7 @@ public interface MOGCounterConfig extends Config
 		keyName = "useLapFinishTiming",
 		name = "Use Lap Finish Mark Timing",
 		description = "If checked, the last mark spawned timer will be based on the moment of the last finished lap. Otherwise, timer is based on the moment the mark is seen.",
-		position = 6
+		position = 8
 	)
 	default boolean useLapFinishTiming()
 	{
@@ -111,7 +133,7 @@ public interface MOGCounterConfig extends Config
 		keyName = "markDespawnNotification",
 		name = "Notify Before Mark Despawn",
 		description = "Sends a notification if enough time has passed since a Mark spawned. Mostly intended for use with the Ardougne course.",
-		position = 7
+		position = 9
 	)
 	default Notification markDespawnNotification()
 	{
@@ -127,7 +149,7 @@ public interface MOGCounterConfig extends Config
 		keyName = "markDespawnNotificationTime",
 		name = "Despawn Notification Time",
 		description = "Time until a despawn warning notification is sent for any given Mark stack",
-		position = 8
+		position = 10
 	)
 	@Units(Units.SECONDS)
 	default int markDespawnNotificationTime()

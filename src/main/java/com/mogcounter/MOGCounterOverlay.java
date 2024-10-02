@@ -27,6 +27,7 @@ package com.mogcounter;
 
 import java.awt.Dimension;
 import java.awt.Graphics2D;
+import java.time.temporal.ChronoUnit;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayMenuEntry;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -80,7 +81,21 @@ class MOGCounterOverlay extends OverlayPanel
 		if (config.showMarkLastSpawn())
 		{
 			long s = Duration.between(plugin.getLastMarkSpawnTime(), Instant.now()).getSeconds();
-			addLine("Last Spawn:", String.format("%d:%02d", (s % 3600) / 60, (s % 60)));
+			addLine("Last Spawn:", formatSeconds(s));
+		}
+
+		if (config.showMarkLastSpawnMinute())
+		{
+			long s = Duration.between(plugin.getLastMarkSpawnTime().truncatedTo(ChronoUnit.MINUTES), Instant.now()).getSeconds();
+			addLine("Last Spawn (M):", formatSeconds(s));
+		}
+
+		if (config.showMarkLastSpawnJagexMinute())
+		{
+			Instant j = plugin.getLastJagexMinuteMarkSpawnTime();
+			String t = j != null ?
+				formatSeconds(Duration.between(j, Instant.now()).getSeconds()) : "-:--";
+			addLine("Last Spawn (J):", t);
 		}
 
 		if (config.showMarksPerHour() && plugin.getMarkSpawnEvents() >= 2)
@@ -104,5 +119,10 @@ class MOGCounterOverlay extends OverlayPanel
 	private void addLine(String left, int right)
 	{
 		addLine(left, Integer.toString(right));
+	}
+
+	private String formatSeconds(long s)
+	{
+		return String.format("%d:%02d", (s % 3600) / 60, (s % 60));
 	}
 }

@@ -52,6 +52,7 @@ import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemDespawned;
 import net.runelite.api.events.ItemSpawned;
 import net.runelite.api.events.StatChanged;
+import net.runelite.api.events.VarbitChanged;
 import net.runelite.client.Notifier;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -117,6 +118,8 @@ public class MOGCounterPlugin extends Plugin
 		new WorldPoint(2668, 3297, 0)  // Ardougne
 	);
 
+	private static final int JAGEX_TIME_VARBIT_ID = 8354;
+
 	@Getter
 	private int marksOnGround;
 	@Getter
@@ -127,6 +130,11 @@ public class MOGCounterPlugin extends Plugin
 	private int markSpawnEvents;
 	@Getter
 	private int spawnsPerHour;
+
+	private int lastJagexMinuteVal;
+	private Instant lastJagexMinuteTime;
+	@Getter
+	private Instant lastJagexMinuteMarkSpawnTime;
 
 	private final Map<WorldPoint, InstantCountTuple> markTiles = new HashMap<>();
 	private final Set<WorldPoint> potentialDespawns = new HashSet<>();
@@ -149,6 +157,30 @@ public class MOGCounterPlugin extends Plugin
 	{
 		overlayManager.remove(mogOverlay);
 		clearCounters();
+	}
+
+	@Subscribe
+	public void onVarbitChanged(VarbitChanged varbitChanged)
+	{
+		if (varbitChanged.getVarbitId() != JAGEX_TIME_VARBIT_ID)
+		{
+			return;
+		}
+
+		int oldVal = lastJagexMinuteVal;
+		lastJagexMinuteVal = varbitChanged.getValue();
+		System.out.println("pog " + lastJagexMinuteVal + " " + client.getTickCount());
+
+		// May behave weirdly if logging in the minute after reset but unsure how to handle that.
+		if (lastJagexMinuteVal != (oldVal + 1) % 1440)
+		{
+			System.out.println("Minute has NOT been set");
+			return;
+		}
+
+		System.out.println("Minute has been set");
+
+		lastJagexMinuteTime = Instant.now();
 	}
 
 	@Subscribe
@@ -194,8 +226,8 @@ public class MOGCounterPlugin extends Plugin
 
 		if (wp.equals(player.getWorldLocation()) || ignoreTiles.contains(wp))
 		{
-			ignoreTiles.add(wp);
-			return;
+			//ignoreTiles.add(wp);
+			//return;
 		}
 
 		InstantCountTuple tuple;
@@ -314,6 +346,10 @@ public class MOGCounterPlugin extends Plugin
 				calculateMarksPerHour();
 			}
 			lastMarkSpawnTime = spawnMoment;
+			if (lastJagexMinuteTime != null)
+			{
+				lastJagexMinuteMarkSpawnTime = lastJagexMinuteTime;
+			}
 			markSpawnEvents++;
 		}
 
@@ -373,6 +409,9 @@ public class MOGCounterPlugin extends Plugin
 	public void clearCounters()
 	{
 		lastMarkSpawnTime = null;
+		lastJagexMinuteVal = 0;
+		lastJagexMinuteTime = null;
+		lastJagexMinuteMarkSpawnTime = null;
 		lastLapTime = null;
 		markSpawnTimes.clear();
 		marksOnGround = 0;
