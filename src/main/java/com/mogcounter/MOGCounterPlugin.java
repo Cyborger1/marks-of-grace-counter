@@ -328,30 +328,47 @@ public class MOGCounterPlugin extends Plugin
 		}
 
 		Instant expire = Instant.now().minusSeconds(config.markDespawnNotificationTime());
-		boolean doNotify = false;
+		int despawnStacks = 0;
+		int despawnMarks = 0;
+		Instant mostRecentDespawnTime = Instant.MIN;
 		for (InstantCountTuple entry : markTiles.values())
 		{
 			int count = entry.getCount();
 			Instant spawn = entry.getInstant();
 
 			if (count <= 0 || spawn == null
-				|| (lastDespawnNotified != null && spawn.compareTo(lastDespawnNotified) <= 0))
+				|| spawn.compareTo(lastDespawnNotified) <= 0)
 			{
 				continue;
 			}
 
 			if (spawn.isBefore(expire))
 			{
-				lastDespawnNotified = spawn;
-				doNotify = true;
+				if (spawn.isAfter(mostRecentDespawnTime))
+				{
+					mostRecentDespawnTime = spawn;
+				}
+				despawnStacks++;
+				despawnMarks += count;
 			}
 		}
 
-		if (doNotify)
+		if (despawnStacks > 0)
 		{
-			String text = markTiles.size() > 1 ?
-				"One of your Marks of Grace stacks is about to despawn!" :
-				"Your Marks of Grace stack is about to despawn!";
+			lastDespawnNotified = mostRecentDespawnTime;
+			String text;
+			if (markTiles.size() > 1)
+			{
+				text = despawnStacks > 1 ?
+					// Mostly here if plugin is turned on with multiple stacks present I guess.
+					String.format("%d of your Marks of Grace stacks are", despawnStacks)
+					: "One of your Marks of Grace stacks is";
+			}
+			else
+			{
+				text = "Your Marks of Grace stack is";
+			}
+			text += String.format(" about to despawn! (%d Mark%s)", despawnMarks, despawnMarks != 1 ? "s" : "");
 			notifier.notify(config.markDespawnNotification(), text);
 		}
 	}
@@ -382,7 +399,7 @@ public class MOGCounterPlugin extends Plugin
 		ignoreTiles.clear();
 		potentialDespawns.clear();
 		doCheckGroundItems = false;
-		lastDespawnNotified = null;
+		lastDespawnNotified = Instant.MIN;
 	}
 
 	public void clearSpawnedMarks()
@@ -392,6 +409,6 @@ public class MOGCounterPlugin extends Plugin
 		ignoreTiles.clear();
 		potentialDespawns.clear();
 		doCheckGroundItems = false;
-		lastDespawnNotified = null;
+		lastDespawnNotified = Instant.MIN;
 	}
 }
