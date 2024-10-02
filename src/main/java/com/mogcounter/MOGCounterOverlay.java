@@ -87,8 +87,9 @@ class MOGCounterOverlay extends OverlayPanel
 		if (config.showMarkLastSpawnMinute())
 		{
 			Instant t = plugin.getLastMarkSpawnTime()
-				.plusMillis(config.markLastSpawnMinuteOffset())
-				.truncatedTo(ChronoUnit.MINUTES);
+				.minusMillis(config.markLastSpawnMinuteOffset())
+				.truncatedTo(ChronoUnit.MINUTES)
+				.plusMillis(config.markLastSpawnMinuteOffset());
 			long s = Duration.between(t, Instant.now()).getSeconds();
 			addLine("Last Spawn (M):", formatSeconds(s));
 		}
