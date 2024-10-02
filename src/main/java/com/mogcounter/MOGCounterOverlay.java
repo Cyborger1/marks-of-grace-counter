@@ -86,16 +86,11 @@ class MOGCounterOverlay extends OverlayPanel
 
 		if (config.showMarkLastSpawnMinute())
 		{
-			long s = Duration.between(plugin.getLastMarkSpawnTime().truncatedTo(ChronoUnit.MINUTES), Instant.now()).getSeconds();
+			Instant t = plugin.getLastMarkSpawnTime()
+				.plusMillis(config.markLastSpawnMinuteOffset())
+				.truncatedTo(ChronoUnit.MINUTES);
+			long s = Duration.between(t, Instant.now()).getSeconds();
 			addLine("Last Spawn (M):", formatSeconds(s));
-		}
-
-		if (config.showMarkLastSpawnJagexMinute())
-		{
-			Instant j = plugin.getLastJagexMinuteMarkSpawnTime();
-			String t = j != null ?
-				formatSeconds(Duration.between(j, Instant.now()).getSeconds()) : "-:--";
-			addLine("Last Spawn (J):", t);
 		}
 
 		if (config.showMarksPerHour() && plugin.getMarkSpawnEvents() >= 2)

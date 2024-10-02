@@ -28,6 +28,7 @@ package com.mogcounter;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
+import net.runelite.client.config.ConfigSection;
 import net.runelite.client.config.Notification;
 import net.runelite.client.config.Range;
 import net.runelite.client.config.Units;
@@ -35,6 +36,13 @@ import net.runelite.client.config.Units;
 @ConfigGroup("mogcounter")
 public interface MOGCounterConfig extends Config
 {
+	@ConfigSection(
+		name = "Experimental",
+		description = "Experimental settings",
+		position = 100
+	)
+	String experimentalSection = "experimental";
+
 	@ConfigItem(
 		keyName = "showMarkCount",
 		name = "Show Overlay",
@@ -86,32 +94,10 @@ public interface MOGCounterConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "showMarkLastSpawnMinute",
-		name = "Show Time Since Last Spawn (M)",
-		description = "Shows the time since the last Mark of Grace spawned, but counting from the start of the minute",
-		position = 5
-	)
-	default boolean showMarkLastSpawnMinute()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-		keyName = "showMarkLastSpawnJagexMinute",
-		name = "Show Time Since Last Spawn (J)",
-		description = "Shows the time since the last Mark of Grace spawned, but counting from the start of the last Jagex minute",
-		position = 6
-	)
-	default boolean showMarkLastSpawnJagexMinute()
-	{
-		return false;
-	}
-
-	@ConfigItem(
 		keyName = "showMarksPerHour",
 		name = "Show Spawns per Hour",
 		description = "Shows the estimated amount of Mark spawns per hour (After getting 2 spawns)",
-		position = 7
+		position = 5
 	)
 	default boolean showMarksPerHour()
 	{
@@ -122,7 +108,7 @@ public interface MOGCounterConfig extends Config
 		keyName = "useLapFinishTiming",
 		name = "Use Lap Finish Mark Timing",
 		description = "If checked, the last mark spawned timer will be based on the moment of the last finished lap. Otherwise, timer is based on the moment the mark is seen.",
-		position = 8
+		position = 6
 	)
 	default boolean useLapFinishTiming()
 	{
@@ -133,7 +119,7 @@ public interface MOGCounterConfig extends Config
 		keyName = "markDespawnNotification",
 		name = "Notify Before Mark Despawn",
 		description = "Sends a notification if enough time has passed since a Mark spawned. Mostly intended for use with the Ardougne course.",
-		position = 9
+		position = 7
 	)
 	default Notification markDespawnNotification()
 	{
@@ -149,11 +135,40 @@ public interface MOGCounterConfig extends Config
 		keyName = "markDespawnNotificationTime",
 		name = "Despawn Notification Time",
 		description = "Time until a despawn warning notification is sent for any given Mark stack",
-		position = 10
+		position = 8
 	)
 	@Units(Units.SECONDS)
 	default int markDespawnNotificationTime()
 	{
 		return 480;
+	}
+
+	@ConfigItem(
+		keyName = "showMarkLastSpawnMinute",
+		name = "Show Time Since Last Spawn (M)",
+		description = "Shows the time since the beginning of the minute of 'Last Spawn'. Intended to help time exact Mark spawns along with 'Lap Finish Mark Timing'.",
+		position = 1,
+		section = experimentalSection
+	)
+	default boolean showMarkLastSpawnMinute()
+	{
+		return false;
+	}
+
+	@Range(
+		min = -60000,
+		max = 60000
+	)
+	@ConfigItem(
+		keyName = "markLastSpawnMinuteOffset",
+		name = "Last Spawn (M) Offset",
+		description = "Use to adjust the start of the minute if your ticks are not lining up correctly",
+		position = 2,
+		section = experimentalSection
+	)
+	@Units(value = Units.MILLISECONDS)
+	default int markLastSpawnMinuteOffset()
+	{
+		return 0;
 	}
 }
