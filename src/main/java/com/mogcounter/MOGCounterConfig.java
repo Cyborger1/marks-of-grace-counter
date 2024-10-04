@@ -37,9 +37,10 @@ import net.runelite.client.config.Units;
 public interface MOGCounterConfig extends Config
 {
 	@ConfigSection(
-		name = "Experimental",
-		description = "Experimental settings",
-		position = 100
+		name = "Experimental Settings",
+		description = "Settings that are intended to help with specific use-cases and may require further tweaking",
+		position = 100,
+		closedByDefault = true
 	)
 	String experimentalSection = "experimental";
 
