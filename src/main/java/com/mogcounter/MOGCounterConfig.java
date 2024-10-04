@@ -28,6 +28,7 @@ package com.mogcounter;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
+import net.runelite.client.config.ConfigSection;
 import net.runelite.client.config.Notification;
 import net.runelite.client.config.Range;
 import net.runelite.client.config.Units;
@@ -35,6 +36,14 @@ import net.runelite.client.config.Units;
 @ConfigGroup("mogcounter")
 public interface MOGCounterConfig extends Config
 {
+	@ConfigSection(
+		name = "Experimental Settings",
+		description = "Settings that are intended to help with specific use-cases and may require further tweaking",
+		position = 100,
+		closedByDefault = true
+	)
+	String experimentalSection = "experimental";
+
 	@ConfigItem(
 		keyName = "showMarkCount",
 		name = "Show Overlay",
@@ -133,5 +142,34 @@ public interface MOGCounterConfig extends Config
 	default int markDespawnNotificationTime()
 	{
 		return 480;
+	}
+
+	@ConfigItem(
+		keyName = "showMarkLastSpawnMinute",
+		name = "Show Time Since Last Spawn (M)",
+		description = "Shows the time since the beginning of the minute of 'Last Spawn'. Intended to help time exact Mark spawns along with 'Lap Finish Mark Timing'.",
+		position = 1,
+		section = experimentalSection
+	)
+	default boolean showMarkLastSpawnMinute()
+	{
+		return false;
+	}
+
+	@Range(
+		min = -60000,
+		max = 60000
+	)
+	@ConfigItem(
+		keyName = "markLastSpawnMinuteOffset",
+		name = "Last Spawn (M) Offset",
+		description = "Use to adjust the start of the minute if your ticks are not lining up correctly",
+		position = 2,
+		section = experimentalSection
+	)
+	@Units(value = Units.MILLISECONDS)
+	default int markLastSpawnMinuteOffset()
+	{
+		return 0;
 	}
 }
